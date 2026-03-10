@@ -2,17 +2,19 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
 interface RevealOverlayProps {
   onComplete: () => void;
+  isLoading?: boolean;
 }
 
-const RevealOverlay = ({ onComplete }: RevealOverlayProps) => {
+const RevealOverlay = ({ onComplete, isLoading = false }: RevealOverlayProps) => {
   const [isClicked, setIsClicked] = useState(false);
 
   const handleStart = () => {
+    if (isLoading) return;
     setIsClicked(true);
-    // Delay para a animação de saída completar
     setTimeout(onComplete, 800);
   };
 
@@ -26,7 +28,7 @@ const RevealOverlay = ({ onComplete }: RevealOverlayProps) => {
             transition: { duration: 0.8, ease: [0.45, 0, 0.55, 1] } 
           }}
           onClick={handleStart}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white text-[#003366] cursor-pointer"
+          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white text-[#003366] ${isLoading ? 'cursor-wait' : 'cursor-pointer'}`}
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -40,26 +42,35 @@ const RevealOverlay = ({ onComplete }: RevealOverlayProps) => {
               <p className="text-lg md:text-xl font-light tracking-[0.4em] uppercase text-gray-400">15 Anos</p>
             </div>
 
-            <div className="relative py-4">
-              <motion.p 
-                animate={{ 
-                  opacity: [0.3, 1, 0.3],
-                  scale: [0.98, 1, 0.98]
-                }}
-                transition={{ 
-                  repeat: Infinity, 
-                  duration: 2.5,
-                  ease: "easeInOut" 
-                }}
-                className="text-xs md:text-sm font-medium uppercase tracking-[0.5em] text-[#003366]"
-              >
-                Toque para abrir
-              </motion.p>
-              <motion.div 
-                className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#003366] rounded-full"
-                animate={{ y: [0, 10, 0], opacity: [0, 1, 0] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-              />
+            <div className="relative py-4 min-h-[60px] flex flex-col items-center justify-center">
+              {isLoading ? (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#003366]/40" />
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400">Carregando convite...</p>
+                </div>
+              ) : (
+                <>
+                  <motion.p 
+                    animate={{ 
+                      opacity: [0.3, 1, 0.3],
+                      scale: [0.98, 1, 0.98]
+                    }}
+                    transition={{ 
+                      repeat: Infinity, 
+                      duration: 2.5,
+                      ease: "easeInOut" 
+                    }}
+                    className="text-xs md:text-sm font-medium uppercase tracking-[0.5em] text-[#003366]"
+                  >
+                    Toque para abrir
+                  </motion.p>
+                  <motion.div 
+                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#003366] rounded-full"
+                    animate={{ y: [0, 10, 0], opacity: [0, 1, 0] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                  />
+                </>
+              )}
             </div>
           </motion.div>
         </motion.div>
