@@ -1,36 +1,31 @@
 "use client";
 
-import React, { useState } from 'react';
-import IntroScreen from '@/components/IntroScreen';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MapPin } from 'lucide-react';
 
 const Index = () => {
-  const [introFinished, setIntroFinished] = useState(false);
-
   const openMaps = () => {
     window.open("https://www.google.com/maps/place/Festa+%26+Cia/@-11.431244,-40.5952361,20.5z/data=!4m14!1m7!3m6!1s0x76c87f74c2b9e31:0x169bcdfbf412f3cc!2sDoce+Vida+Bomboniere+e+festa!8m2!3d-11.4313673!4d-40.5953833!16s%2Fg%2F11jtvs1p2y!3m5!1s0x76c8785d78207ed:0x53d178a0482b1df3!8m2!3d-11.4312495!4d-40.5953558!16s%2Fg%2F11h32_b877?entry=ttu&g_ep=EgoyMDI2MDMwOC4wIKXMDSoASAFQAw%3D%3D", "_blank");
   };
 
   return (
-    <div className="min-h-screen bg-white selection:bg-amber-100">
-      {/* Intro Screen com animação SVG */}
-      {!introFinished && <IntroScreen onFinished={() => setIntroFinished(true)} />}
-
-      {/* Main Content Container */}
+    <div className="min-h-screen bg-white selection:bg-amber-100 overflow-x-hidden">
+      {/* Conteúdo Principal - Carrega diretamente sem overlays */}
       <main 
-        className={`mx-auto bg-white min-h-screen shadow-2xl ${
-          introFinished ? 'block' : 'hidden'
-        }`}
+        className="mx-auto bg-white min-h-screen shadow-2xl relative z-0"
         style={{ maxWidth: '1080px' }}
       >
         
-        {/* SEÇÃO 1: Imagem 01.png */}
-        <section id="section-1" className="w-full leading-[0]">
-          <img 
-            src="/01.png" 
-            alt="Convite Parte 1" 
-            className="w-full h-auto block"
+        {/* SEÇÃO 1: VÍDEO */}
+        <section id="section-1" className="w-full leading-[0] overflow-hidden">
+          <video 
+            src="/sessao1.mp4" 
+            className="w-full h-auto block" 
+            autoPlay 
+            loop 
+            muted 
+            playsInline
           />
         </section>
 
@@ -42,7 +37,7 @@ const Index = () => {
             className="w-full h-auto block"
           />
           
-          {/* Conteúdo de Localização SOBREPOSTO com posição percentual para ser responsivo */}
+          {/* Conteúdo de Localização SOBREPOSTO */}
           <div 
             className="absolute left-0 right-0 flex flex-col items-center px-6 space-y-4 md:space-y-6"
             style={{ top: '47%' }}
