@@ -20,7 +20,8 @@
             font-family: 'Playfair Display', serif;
         }
 
-        #intro-screen {
+        /* O container da intro agora é o container do vídeo principal */
+        #video-container {
             position: fixed;
             inset: 0;
             z-index: 100;
@@ -28,24 +29,29 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            cursor: pointer;
             width: 100%;
             height: 100vh;
+            max-width: 1080px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
-        .intro-container {
-            width: 100%;
-            height: 100%;
-            max-width: 1080px;
+        /* Quando revelado, ele se torna parte do fluxo do documento */
+        #video-container.revealed {
             position: relative;
-            overflow: hidden;
+            height: auto;
+            left: 0;
+            transform: none;
+            z-index: 1;
         }
 
         .main-content {
+            width: 100%;
             max-width: 1080px;
             margin: 0 auto;
             background-color: white;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            opacity: 0;
             display: none;
         }
 
@@ -63,7 +69,6 @@
             transform: scale(0.95);
         }
 
-        /* Filtro de distorção para a máscara */
         .displacement-filter {
             filter: url(#displacementFilter);
         }
@@ -73,47 +78,64 @@
             width: 100%;
             height: 100%;
         }
+
+        .video-element {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Ajuste para o SVG do vídeo quando revelado */
+        #video-container.revealed svg {
+            height: auto;
+        }
     </style>
 </head>
 <body>
 
-    <!-- INTRO SCREEN -->
-    <div id="intro-screen" onclick="startReveal()">
-        <div class="intro-container">
-            <svg viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice">
-                <defs>
-                    <filter id="displacementFilter">
-                        <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" />
-                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G" />
-                    </filter>
-                    <mask id="circleMask">
-                        <circle id="reveal-circle" cx="540" cy="960" r="0" fill="white" class="displacement-filter" />
-                    </mask>
-                </defs>
-                <image xlink:href="01.png" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" mask="url(#circleMask)" />
-            </svg>
+    <!-- CONTAINER ÚNICO DE VÍDEO (INTRO + TOPO) -->
+    <div id="video-container" onclick="startReveal()">
+        <svg viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <filter id="displacementFilter">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G" />
+                </filter>
+                <mask id="circleMask">
+                    <!-- O círculo começa em 0 para a intro e vai para 2000 para revelar -->
+                    <circle id="reveal-circle" cx="540" cy="960" r="0" fill="white" class="displacement-filter" />
+                </mask>
+            </defs>
+            
+            <foreignObject x="0" y="0" width="1080" height="1920" mask="url(#circleMask)">
+                <video 
+                    id="shared-video"
+                    src="sessao1.mp4" 
+                    autoplay 
+                    loop 
+                    muted 
+                    playsinline
+                    class="video-element"
+                ></video>
+            </foreignObject>
+        </svg>
 
-            <!-- Overlay de Clique -->
-            <div id="click-overlay" class="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/10 backdrop-blur-[2px]">
-                <div class="bg-white/80 px-8 py-4 rounded-full shadow-xl border border-amber-100 text-center">
-                    <h2 class="text-gray-800 text-lg md:text-2xl tracking-[0.2em] uppercase">
-                        Clique para abrir
-                    </h2>
-                    <div class="mt-2 text-amber-600 font-bold animate-bounce">
-                        ↓
-                    </div>
+        <!-- Overlay de Clique -->
+        <div id="click-overlay" class="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/10 backdrop-blur-[2px]">
+            <div class="bg-white/80 px-8 py-4 rounded-full shadow-xl border border-amber-100 text-center">
+                <h2 class="text-gray-800 text-lg md:text-2xl tracking-[0.2em] uppercase">
+                    Clique para abrir
+                </h2>
+                <div class="mt-2 text-amber-600 font-bold animate-bounce">
+                    ↓
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL -->
+    <!-- RESTANTE DO CONTEÚDO -->
     <main id="main-content" class="main-content">
-        <!-- SEÇÃO 1 -->
-        <section class="w-full leading-[0]">
-            <img src="01.png" alt="Convite Parte 1" class="w-full h-auto block">
-        </section>
-
         <!-- SEÇÃO 2 -->
         <section class="w-full relative leading-[0]">
             <img src="02.png" alt="Convite Parte 2" class="w-full h-auto block">
@@ -138,30 +160,31 @@
         function startReveal() {
             const overlay = document.getElementById('click-overlay');
             const circle = document.getElementById('reveal-circle');
-            const intro = document.getElementById('intro-screen');
+            const videoContainer = document.getElementById('video-container');
             const main = document.getElementById('main-content');
 
             if (overlay.style.display === 'none') return;
 
             overlay.style.display = 'none';
             
-            // Mostra o conteúdo principal imediatamente por baixo para permitir scroll antecipado
+            // Prepara o conteúdo de baixo
             main.style.display = 'block';
 
-            // Animação de 2.5 segundos
             gsap.to(circle, {
                 attr: { r: 2000 },
                 duration: 2.5,
                 ease: "power2.inOut",
                 onComplete: () => {
-                    intro.style.display = 'none';
+                    // Transforma o container da intro no topo do site
+                    videoContainer.classList.add('revealed');
+                    videoContainer.onclick = null;
+                    videoContainer.style.cursor = 'default';
+                    
+                    // Mostra o resto do conteúdo
+                    gsap.to(main, { opacity: 1, duration: 0.5 });
+                    document.body.style.overflow = 'auto';
                 }
             });
-
-            // Libera o scroll 1 segundo antes do fim da animação (aos 1.5s)
-            setTimeout(() => {
-                document.body.style.overflow = 'auto';
-            }, 1500);
         }
 
         function openMaps() {
