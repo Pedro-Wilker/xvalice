@@ -18,31 +18,37 @@
             padding: 0;
             overflow-x: hidden;
             font-family: 'Playfair Display', serif;
+            -webkit-tap-highlight-color: transparent;
+            /* Scroll sempre habilitado */
+            overflow-y: auto;
         }
 
-        /* O container da intro agora é o container do vídeo principal */
+        /* Container da Intro/Vídeo */
         #video-container {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 1080px;
+            height: 100vh;
             z-index: 100;
             background-color: white;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            width: 100%;
-            height: 100vh;
-            max-width: 1080px;
-            left: 50%;
-            transform: translateX(-50%);
+            overflow: hidden;
+            pointer-events: all;
         }
 
-        /* Quando revelado, ele se torna parte do fluxo do documento */
+        /* Estado após a animação ou quando o usuário rola */
         #video-container.revealed {
             position: relative;
-            height: auto;
             left: 0;
             transform: none;
+            height: auto;
             z-index: 1;
+            margin: 0 auto;
         }
 
         .main-content {
@@ -51,8 +57,8 @@
             margin: 0 auto;
             background-color: white;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            opacity: 0;
-            display: none;
+            /* Começa visível mas atrás da intro */
+            display: block;
         }
 
         .btn-maps {
@@ -60,41 +66,38 @@
             transition: all 0.3s ease;
         }
 
-        .btn-maps:hover {
-            background-color: #6b0000;
-            transform: scale(1.05);
-        }
-
-        .btn-maps:active {
-            transform: scale(0.95);
-        }
-
         .displacement-filter {
             filter: url(#displacementFilter);
         }
 
+        /* SVG Responsivo */
         svg {
             display: block;
             width: 100%;
             height: 100%;
+            max-height: 100vh;
+        }
+
+        #video-container.revealed svg {
+            height: auto;
+            max-height: none;
         }
 
         .video-element {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: block;
         }
 
-        /* Ajuste para o SVG do vídeo quando revelado */
-        #video-container.revealed svg {
-            height: auto;
+        foreignObject {
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
 
-    <!-- CONTAINER ÚNICO DE VÍDEO (INTRO + TOPO) -->
+    <!-- CONTAINER ÚNICO DE VÍDEO -->
     <div id="video-container" onclick="startReveal()">
         <svg viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid slice">
             <defs>
@@ -103,7 +106,6 @@
                     <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G" />
                 </filter>
                 <mask id="circleMask">
-                    <!-- O círculo começa em 0 para a intro e vai para 2000 para revelar -->
                     <circle id="reveal-circle" cx="540" cy="960" r="0" fill="white" class="displacement-filter" />
                 </mask>
             </defs>
@@ -123,7 +125,7 @@
 
         <!-- Overlay de Clique -->
         <div id="click-overlay" class="absolute inset-0 flex flex-col items-center justify-center z-10 bg-white/10 backdrop-blur-[2px]">
-            <div class="bg-white/80 px-8 py-4 rounded-full shadow-xl border border-amber-100 text-center">
+            <div class="bg-white/80 px-8 py-4 rounded-full shadow-xl border border-amber-100 text-center mx-4">
                 <h2 class="text-gray-800 text-lg md:text-2xl tracking-[0.2em] uppercase">
                     Clique para abrir
                 </h2>
@@ -136,6 +138,9 @@
 
     <!-- RESTANTE DO CONTEÚDO -->
     <main id="main-content" class="main-content">
+        <!-- Espaçador para o conteúdo não aparecer "atrás" da intro antes da hora -->
+        <div class="h-[100vh] w-full"></div>
+
         <!-- SEÇÃO 2 -->
         <section class="w-full relative leading-[0]">
             <img src="02.png" alt="Convite Parte 2" class="w-full h-auto block">
@@ -157,32 +162,40 @@
     </main>
 
     <script>
+        window.addEventListener('load', () => {
+            const video = document.getElementById('shared-video');
+            video.play().catch(() => {});
+        });
+
+        // Se o usuário rolar antes de clicar, inicia a revelação automaticamente
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                startReveal();
+            }
+        }, { once: true });
+
         function startReveal() {
             const overlay = document.getElementById('click-overlay');
             const circle = document.getElementById('reveal-circle');
             const videoContainer = document.getElementById('video-container');
-            const main = document.getElementById('main-content');
+            const video = document.getElementById('shared-video');
 
             if (overlay.style.display === 'none') return;
 
+            video.play();
             overlay.style.display = 'none';
-            
-            // Prepara o conteúdo de baixo
-            main.style.display = 'block';
 
             gsap.to(circle, {
                 attr: { r: 2000 },
                 duration: 2.5,
                 ease: "power2.inOut",
                 onComplete: () => {
-                    // Transforma o container da intro no topo do site
                     videoContainer.classList.add('revealed');
                     videoContainer.onclick = null;
                     videoContainer.style.cursor = 'default';
-                    
-                    // Mostra o resto do conteúdo
-                    gsap.to(main, { opacity: 1, duration: 0.5 });
-                    document.body.style.overflow = 'auto';
+                    // Remove o espaçador inicial agora que o vídeo está no fluxo
+                    const spacer = document.querySelector('.main-content > div:first-child');
+                    if (spacer) spacer.remove();
                 }
             });
         }
@@ -190,8 +203,6 @@
         function openMaps() {
             window.open("https://www.google.com/maps/place/Festa+%26+Cia/@-11.431244,-40.5952361,20.5z/data=!4m14!1m7!3m6!1s0x76c87f74c2b9e31:0x169bcdfbf412f3cc!2sDoce+Vida+Bomboniere+e+festa!8m2!3d-11.4313673!4d-40.5953833!16s%2Fg%2F11jtvs1p2y!3m5!1s0x76c8785d78207ed:0x53d178a0482b1df3!8m2!3d-11.4312495!4d-40.5953558!16s%2Fg%2F11h32_b877?entry=ttu&g_ep=EgoyMDI2MDMwOC4wIKXMDSoASAFQAw%3D%3D", "_blank");
         }
-
-        document.body.style.overflow = 'hidden';
     </script>
 </body>
 </html>
