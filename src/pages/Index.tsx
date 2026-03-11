@@ -55,7 +55,7 @@ const Index = () => {
         <section id="section-1" className="w-full leading-[0] overflow-hidden">
           <video 
             ref={videoRef}
-            src="/sessao1.mp4" 
+            src="/sessao1certo.mp4" 
             className="w-full h-auto block" 
             autoPlay 
             loop 
